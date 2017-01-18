@@ -100,13 +100,8 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 					transactionDao.saveOrUpdate(paymentTransaction);
 				}
 			}
-
-		} catch (TransactionDaoException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (PayPalRESTException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (Exception e) {
+			throw new PaymentServiceException();
 		}
 	}
 
