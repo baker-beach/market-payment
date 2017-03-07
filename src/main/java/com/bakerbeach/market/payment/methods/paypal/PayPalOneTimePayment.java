@@ -118,30 +118,8 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 	}
 
 	@Override
-	public void doOrder(Order order, PaymentContext paymentContext) throws PaymentServiceException {
+	public void doOrder(Order order) throws PaymentServiceException {
 
-		doOrder(order);
-
-		if (instantCapture) {
-			doCapture(order, order.getTotal());
-		}
-
-		PaymentData paymentData;
-		try {
-			paymentData = paymentDataDao.findByCustomerId(paymentContext.getCustomerId());
-		} catch (Exception e) {
-			paymentData = new PaymentData();
-			paymentData.setCustomerId(paymentContext.getCustomerId());
-		}
-		paymentData.setLastPaymemtMethodCode(this.getPaymentMethodCode());
-		try {
-			paymentDataDao.saveOrUpdate(paymentData);
-		} catch (TransactionDaoException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void doOrder(Order order) throws PaymentServiceException {
 		try {
 			Map<String, Object> log = new HashMap<String, Object>();
 			log.put("request", "payment_execute");
@@ -166,6 +144,24 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 			throw new PaymentServiceException();
 		} catch (PayPalRESTException e) {
 			throw new PaymentServiceException();
+		}
+
+		if (instantCapture) {
+			doCapture(order, order.getTotal());
+		}
+
+		PaymentData paymentData;
+		try {
+			paymentData = paymentDataDao.findByCustomerId(order.getCustomerId());
+		} catch (Exception e) {
+			paymentData = new PaymentData();
+			paymentData.setCustomerId(order.getCustomerId());
+		}
+		paymentData.setLastPaymemtMethodCode(this.getPaymentMethodCode());
+		try {
+			paymentDataDao.saveOrUpdate(paymentData);
+		} catch (TransactionDaoException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -360,6 +356,12 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 	 */
 	public void setInstantCapture(boolean instantCapture) {
 		this.instantCapture = instantCapture;
+	}
+
+	@Override
+	public void doCancel(Order order) throws PaymentServiceException {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

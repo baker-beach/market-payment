@@ -7,11 +7,13 @@ import java.util.Map;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import com.bakerbeach.market.payment.methods.PaymentMethod;
+import com.bakerbeach.market.payment.methods.PaymentServiceMethod;
+import com.bakerbeach.market.payment.methods.PaymentShopMethod;
 import com.paypal.base.rest.APIContext;
 import com.paypal.base.rest.OAuthTokenCredential;
 import com.paypal.base.rest.PayPalRESTException;
 
-public abstract class AbstractPayPalMethod implements PaymentMethod {
+public abstract class AbstractPayPalMethod implements PaymentServiceMethod,PaymentShopMethod {
 
 	private String clientId;
 	private String secret;

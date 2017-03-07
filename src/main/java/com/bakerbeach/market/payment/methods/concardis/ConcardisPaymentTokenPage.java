@@ -1,27 +1,20 @@
 package com.bakerbeach.market.payment.methods.concardis;
 
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.lang.NotImplementedException;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import com.bakerbeach.market.core.api.model.Cart;
-import com.bakerbeach.market.core.api.model.Order;
 import com.bakerbeach.market.core.api.model.ShopContext;
 import com.bakerbeach.market.payment.api.service.PaymentServiceException;
-import com.bakerbeach.market.payment.methods.PaymentMethod;
+import com.bakerbeach.market.payment.methods.PaymentShopMethod;
 import com.bakerbeach.market.payment.model.PaymentContext;
 import com.bakerbeach.market.payment.model.PaymentData;
 import com.bakerbeach.market.payment.service.TransactionDaoException;
 
-public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implements PaymentMethod {
+public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implements PaymentShopMethod {
 
 	@Override
 	public String getPaymentType() {
@@ -100,45 +93,6 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 	public void configPayment(PaymentContext paymentContext, Map<String, String> parameter)
 			throws PaymentServiceException {
 
-	}
-
-	@Override
-	public void doOrder(Order order, PaymentContext paymentContext) throws PaymentServiceException {
-		doReservation(order, order.getCustomerId());
-
-	}
-
-	private void doReservation(Order order, String aliasId) {
-
-		BigDecimal amount = order.getTotal().multiply(new BigDecimal(100));
-
-		MultiValueMap<String, String> parameter = new LinkedMultiValueMap<String, String>();
-
-		parameter.add("PSPID", getPspId());
-		parameter.add("ORDERID", order.getId());
-		parameter.add("USERID", getUserId());
-		parameter.add("PSWD", getPassword());
-		parameter.add("AMOUNT", (new Integer(amount.intValue())).toString());
-		parameter.add("CURRENCY", order.getCurrency());
-		parameter.add("OPERATION", "RES");
-		parameter.add("ALIAS.ALIASID", aliasId);
-		parameter.add("SHASIGNATURE.SHASIGN", ConcardisSignatureHelper.sha1(parameter,getSecret()));
-
-		@SuppressWarnings("serial")
-		HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<MultiValueMap<String, String>>(parameter,
-				new HttpHeaders() {
-					{
-						setContentType(new MediaType("application", "x-www-form-urlencoded", Charset.forName("UTF-8")));
-					}
-				});
-		String result = getRestTemplate().postForObject(getUrl(), entity, String.class);
-		System.out.println(result);
-	}
-
-	@Override
-	public void doCapture(Order order, BigDecimal amount) {
-		throw new NotImplementedException();
-		
 	}
 
 }

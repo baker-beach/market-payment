@@ -6,21 +6,20 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+
 import com.bakerbeach.market.core.api.model.Cart;
-import com.bakerbeach.market.core.api.model.Order;
 import com.bakerbeach.market.core.api.model.ShopContext;
 import com.bakerbeach.market.payment.api.service.PaymentServiceException;
 import com.bakerbeach.market.payment.api.service.PaymentServiceException.PaymentRedirectException;
-import com.bakerbeach.market.payment.methods.PaymentMethod;
+import com.bakerbeach.market.payment.methods.PaymentShopMethod;
 import com.bakerbeach.market.payment.model.PaymentContext;
 import com.bakerbeach.market.payment.model.PaymentData;
 import com.bakerbeach.market.payment.model.PaymentTransaction;
 import com.bakerbeach.market.payment.service.TransactionDaoException;
 
-public class ConcardisPaymentECommerceMethod extends AbstractConcardisPayment implements PaymentMethod {
+public class ConcardisPaymentECommerceMethod extends AbstractConcardisPayment implements PaymentShopMethod {
 
 	@Override
 	public String getPaymentType() {
@@ -64,7 +63,7 @@ public class ConcardisPaymentECommerceMethod extends AbstractConcardisPayment im
 			parameter.add("PSPID", getPspId());
 			parameter.add("ORDERID", shopContext.getOrderId());
 			parameter.add("AMOUNT", (new Integer(cart.getGrandTotal().multiply(new BigDecimal(100)).intValue()).toString()));
-			parameter.add("CURRENCY", shopContext.getCurrency());
+			parameter.add("CURRENCY", shopContext.getCurrentCurrency().getIsoCode());
 			parameter.add("LANGUAGE", shopContext.getCurrentLocale().toLanguageTag());
 			
 			parameter.add("ACCEPTURL", shopContext.getApplicationPath()+"/concardis/accept/");
@@ -150,16 +149,4 @@ public class ConcardisPaymentECommerceMethod extends AbstractConcardisPayment im
 		paymentContext.setPaymentValid(true);
 
 	}
-
-	@Override
-	public void doOrder(Order order, PaymentContext paymentContext) throws PaymentServiceException {
-
-	}
-
-
-	@Override
-	public void doCapture(Order order, BigDecimal amount) {
-		throw new NotImplementedException();		
-	}
-
 }
