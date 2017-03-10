@@ -7,7 +7,7 @@
 		<artifactId>market-parent</artifactId>
 		<version>1.0.1</version>
 	</parent>
-	<artifactId>market-payment</artifactId>
+	<artifactId>market-xpayment</artifactId>
 	<name>market-payment</name>
 	<packaging>jar</packaging>
 	<properties>
@@ -16,7 +16,12 @@
 		<dependency>
 			<groupId>com.bakerbeach.market</groupId>
 			<artifactId>market-payment-api</artifactId>
-			<version>1.1.1</version>
+			<version>[0.9.0-SNAPSHOT]</version>
+		</dependency>
+		<dependency>
+			<groupId>com.bakerbeach.market</groupId>
+			<artifactId>market-xcart-api</artifactId>
+			<version>0.9.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.paypal.sdk</groupId>
@@ -39,5 +44,5 @@
 			<version>2.6</version>
 		</dependency>
 	</dependencies>
-	<version>1.1.4</version>
+	<version>0.9.0-SNAPSHOT</version>
 </project>
