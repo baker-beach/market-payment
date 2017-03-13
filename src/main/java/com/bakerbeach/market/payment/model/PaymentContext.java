@@ -3,8 +3,8 @@ package com.bakerbeach.market.payment.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.bakerbeach.market.core.api.model.Cart;
 import com.bakerbeach.market.core.api.model.ShopContext;
-import com.bakerbeach.market.core.api.model.XCart;
 
 public class PaymentContext {
 	
@@ -14,7 +14,7 @@ public class PaymentContext {
 	
 	private String currentPaymentMethodCode = "";
 	
-	private XCart cart;
+	private Cart cart;
 	
 	private String customerId;
 	
@@ -40,7 +40,7 @@ public class PaymentContext {
 		this.paymentValid = paymentValid;
 	}
 	
-	public XCart getCart(){
+	public Cart getCart(){
 		return cart;
 	}
 	
@@ -51,7 +51,7 @@ public class PaymentContext {
 	/**
 	 * @param cart the cart to set
 	 */
-	public void setCart(XCart cart) {
+	public void setCart(Cart cart) {
 		this.cart = cart;
 	}
 

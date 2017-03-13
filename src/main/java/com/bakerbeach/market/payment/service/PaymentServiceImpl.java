@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.bakerbeach.market.commons.MessageImpl;
+import com.bakerbeach.market.core.api.model.Cart;
 import com.bakerbeach.market.core.api.model.Customer;
 import com.bakerbeach.market.core.api.model.Order;
 import com.bakerbeach.market.core.api.model.ShopContext;
-import com.bakerbeach.market.core.api.model.XCart;
 import com.bakerbeach.market.payment.api.model.PaymentInfo;
 import com.bakerbeach.market.payment.api.service.PaymentService;
 import com.bakerbeach.market.payment.api.service.PaymentServiceException;
@@ -24,7 +24,7 @@ public class PaymentServiceImpl implements PaymentService {
 	private PaymentDataDao paymentDataDao;
 
 	@Override
-	public PaymentInfo initPayment(ShopContext shopContext, Customer customer, XCart cart)
+	public PaymentInfo initPayment(ShopContext shopContext, Customer customer, Cart cart)
 			throws PaymentServiceException {
 		PaymentContext paymentContext = getPaymentContext(shopContext.getOrderId());
 		paymentContext.setShopContext(shopContext);
@@ -37,7 +37,7 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 	
 	@Override
-	public PaymentInfo doPreOrder(XCart cart, ShopContext shopContext) throws PaymentServiceException {
+	public PaymentInfo doPreOrder(Cart cart, ShopContext shopContext) throws PaymentServiceException {
 		PaymentContext paymentContext = getPaymentContext(shopContext.getOrderId());
 		PaymentMethod paymentMethod = paymentMethods
 				.get(shopContext.getShopCode() + "|" + paymentContext.getCurrentPaymentMethodCode());
