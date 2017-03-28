@@ -34,6 +34,7 @@ public class PaymentDataDao {
 			throw new TransactionDaoException();
 		} catch (Exception e) {
 			log.error(ExceptionUtils.getMessage(e));
+			log.error(ExceptionUtils.getStackTrace(e));
 			throw new TransactionDaoException();
 		}
 	}

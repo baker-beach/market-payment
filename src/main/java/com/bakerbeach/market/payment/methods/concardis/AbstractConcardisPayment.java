@@ -10,17 +10,28 @@ import java.util.Set;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import com.bakerbeach.market.payment.model.PaymentTransaction;
 import com.bakerbeach.market.payment.service.PaymentDataDao;
 import com.bakerbeach.market.payment.service.TransactionDao;
+import com.bakerbeach.market.payment.service.TransactionDaoException;
 
 public abstract class AbstractConcardisPayment {
-
-	private String url;
+	
+	private final String URL_TOKENPAGE = "https://payengine.[mode].v-psp.com/Tokenization/Hostedpage";
+	private final String URL_ORDER = "https://secure.payengine.de/ncol/[mode]/orderdirect.asp";
+	private final String URL_MAINTENANCE = "https://secure.payengine.de/ncol/[mode]/maintenancedirect.asp";
+	private final String URL_ECOMMERCE = "https://secure.payengine.de/ncol/[mode]/orderstandard_utf8.asp";
+	
+	private String mode = "test";
 	private String secret;
 	private String password;
 	private String userId;
 	private String pspId;
-	private RestTemplate restTemplate;
+	private RestTemplate restTemplate = new RestTemplate();
+	private String returnUrl;
+	private String cancelUrl;
+
+
 	private TransactionDao transactionDao;
 	private PaymentDataDao paymentDataDao;
 
@@ -47,13 +58,21 @@ public abstract class AbstractConcardisPayment {
 		}
 
 	}
-
-	public String getUrl() {
-		return url;
+	
+	protected final String getOrderUrl(){
+		return URL_ORDER.replace("[mode]", mode);
 	}
-
-	public void setUrl(String url) {
-		this.url = url;
+	
+	protected final String getMaintenanceUrl(){
+		return URL_MAINTENANCE.replace("[mode]", mode);
+	}
+	
+	protected final String getTokenpageUrl(){
+		return URL_TOKENPAGE.replace("[mode]", mode);
+	}
+	
+	protected final String getECommerceUrl(){
+		return URL_TOKENPAGE.replace("[mode]", mode);
 	}
 
 	public String getSecret() {
@@ -110,6 +129,30 @@ public abstract class AbstractConcardisPayment {
 
 	public void setPaymentDataDao(PaymentDataDao paymentDataDao) {
 		this.paymentDataDao = paymentDataDao;
+	}
+	
+	public String getReturnUrl() {
+		return returnUrl;
+	}
+
+	public void setReturnUrl(String returnUrl) {
+		this.returnUrl = returnUrl;
+	}
+
+	public String getCancelUrl() {
+		return cancelUrl;
+	}
+
+	public void setCancelUrl(String cancelUrl) {
+		this.cancelUrl = cancelUrl;
+	}
+
+	public String getMode() {
+		return mode;
+	}
+
+	public void setMode(String mode) {
+		this.mode = mode;
 	}
 
 }

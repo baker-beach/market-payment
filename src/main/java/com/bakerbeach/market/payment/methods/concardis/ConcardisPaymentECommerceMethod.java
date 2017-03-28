@@ -76,7 +76,7 @@ public class ConcardisPaymentECommerceMethod extends AbstractConcardisPayment im
 			
 			parameter.add("SHASIGN", sha1(parameter));
 
-			StringBuilder url = new StringBuilder(getUrl());
+			StringBuilder url = new StringBuilder(getECommerceUrl()+"?");
 
 			for (String key : parameter.keySet()) {
 				try {
