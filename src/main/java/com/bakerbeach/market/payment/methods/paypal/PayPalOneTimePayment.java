@@ -262,14 +262,14 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 		try {
 
 			Map<String, Object> log = new HashMap<String, Object>();
+			
+			paymentTransaction.getLog().add(log);
 
 			log.put("request", payment.toJSON());
 
 			createdPayment = payment.create(getApiContext());
 
 			log.put("response", createdPayment.toJSON());
-
-			paymentTransaction.getLog().add(log);
 
 			paymentTransaction.getData().put("payment_id", createdPayment.getId());
 
@@ -281,7 +281,8 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 				}
 			}
 
-		} catch (PayPalRESTException e) {
+		} catch (Exception e) {
+			throw new PaymentServiceException();
 		} finally {
 			try {
 				transactionDao.saveOrUpdate(paymentTransaction);
