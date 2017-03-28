@@ -262,7 +262,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 		try {
 
 			Map<String, Object> log = new HashMap<String, Object>();
-			
+
 			paymentTransaction.getLog().add(log);
 
 			log.put("request", payment.toJSON());
@@ -281,6 +281,8 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 				}
 			}
 
+		} catch (PaymentRedirectException e) {
+			throw e;
 		} catch (Exception e) {
 			throw new PaymentServiceException();
 		} finally {
