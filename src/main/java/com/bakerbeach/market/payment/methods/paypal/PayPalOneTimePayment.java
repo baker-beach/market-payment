@@ -16,6 +16,7 @@ import com.bakerbeach.market.commons.MessageImpl;
 import com.bakerbeach.market.core.api.model.Cart;
 import com.bakerbeach.market.core.api.model.CartItem;
 import com.bakerbeach.market.core.api.model.CartItemQualifier;
+import com.bakerbeach.market.core.api.model.Message;
 import com.bakerbeach.market.core.api.model.Order;
 import com.bakerbeach.market.core.api.model.ShopContext;
 import com.bakerbeach.market.core.api.model.Total;
@@ -84,23 +85,28 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 
 	@Override
 	public void processReturn(PaymentContext paymentContext, Map<String, String> parameter) throws PaymentServiceException {
-		try {
-			PaymentTransaction paymentTransaction = transactionDao.findByOrderId(paymentContext.getOrderId());
 
-			if (parameter.get("paymentId").equals((String) paymentTransaction.getData().get("payment_id"))) {
-				Map<String, Object> log = new HashMap<String, Object>();
-				log.put("request", "payment_info");
-				Payment payment = Payment.get(getApiContext(), parameter.get("paymentId"));
-				log.put("response", payment.toJSON());
-				String payerID = payment.getPayer().getPayerInfo().getPayerId();
-				if (parameter.get("PayerID").equals(payerID)) {
-					paymentTransaction.getData().put("payer_id", payerID);
-					transactionDao.saveOrUpdate(paymentTransaction);
+		if (parameter.containsKey("result") && !parameter.get("result").equals("cancel")) {
+
+			try {
+				PaymentTransaction paymentTransaction = transactionDao.findByOrderId(paymentContext.getOrderId());
+
+				if (parameter.get("paymentId").equals((String) paymentTransaction.getData().get("payment_id"))) {
+					Map<String, Object> log = new HashMap<String, Object>();
+					log.put("request", "payment_info");
+					Payment payment = Payment.get(getApiContext(), parameter.get("paymentId"));
+					log.put("response", payment.toJSON());
+					String payerID = payment.getPayer().getPayerInfo().getPayerId();
+					if (parameter.get("PayerID").equals(payerID)) {
+						paymentTransaction.getData().put("payer_id", payerID);
+						transactionDao.saveOrUpdate(paymentTransaction);
+					}
 				}
+			} catch (Exception e) {
+				throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.return.errror"));
 			}
-		} catch (Exception e) {
-			throw new PaymentServiceException();
-		}
+		} else
+			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.return.cancel"));
 	}
 
 	@Override
@@ -163,9 +169,9 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 			paymentTransaction.getLog().add(logAuth);
 			transactionDao.saveOrUpdate(paymentTransaction);
 		} catch (TransactionDaoException e) {
-			throw new PaymentServiceException();
+			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.order.error"));
 		} catch (PayPalRESTException e) {
-			throw new PaymentServiceException();
+			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.order.error"));
 		}
 	}
 
@@ -284,7 +290,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 		} catch (PaymentRedirectException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new PaymentServiceException();
+			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.init.error"));
 		} finally {
 			try {
 				transactionDao.saveOrUpdate(paymentTransaction);
@@ -323,9 +329,9 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 			}
 
 		} catch (TransactionDaoException e) {
-			throw new PaymentServiceException();
+			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.capture.error"));
 		} catch (PayPalRESTException e) {
-			throw new PaymentServiceException();
+			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.capture.error"));
 		}
 
 	}
