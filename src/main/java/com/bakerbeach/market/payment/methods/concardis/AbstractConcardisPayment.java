@@ -17,7 +17,8 @@ import com.bakerbeach.market.payment.service.TransactionDaoException;
 
 public abstract class AbstractConcardisPayment {
 	
-	private final String URL_TOKENPAGE = "https://payengine.[mode].v-psp.com/Tokenization/Hostedpage";
+	private final String URL_TOKENPAGE = "https://payengine.test.v-psp.com/Tokenization/Hostedpage";
+	private final String URL_TOKENPAGE_PROD = "https://secure.payengine.de/Tokenization/HostedPage";
 	private final String URL_ORDER = "https://secure.payengine.de/ncol/[mode]/orderdirect.asp";
 	private final String URL_MAINTENANCE = "https://secure.payengine.de/ncol/[mode]/maintenancedirect.asp";
 	private final String URL_ECOMMERCE = "https://secure.payengine.de/ncol/[mode]/orderstandard_utf8.asp";
@@ -68,7 +69,10 @@ public abstract class AbstractConcardisPayment {
 	}
 	
 	protected final String getTokenpageUrl(){
-		return URL_TOKENPAGE.replace("[mode]", mode);
+		if(mode.equals("test"))
+			return URL_TOKENPAGE;
+		else
+			return URL_TOKENPAGE_PROD;
 	}
 	
 	protected final String getECommerceUrl(){

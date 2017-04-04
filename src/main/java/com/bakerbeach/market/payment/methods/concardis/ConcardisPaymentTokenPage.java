@@ -182,9 +182,9 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 		parameter.add("AMOUNT", (new Integer(amount.intValue())).toString());
 		parameter.add("CURRENCY", order.getCurrency());
 		parameter.add("OPERATION", "RES");
-		parameter.add("CARD.PAYMENTMETHOD", "CreditCard");
+		parameter.add("PM", "CreditCard");
 		parameter.add("ALIAS", (String) paymentData.get("AliasId"));
-		parameter.add("SHASIGNATURE.SHASIGN", ConcardisSignatureHelper.sha1(parameter, getSecret()));
+		parameter.add("SHASIGN", ConcardisSignatureHelper.sha1(parameter, getSecret()));
 
 		@SuppressWarnings("serial")
 		HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<MultiValueMap<String, String>>(parameter, new HttpHeaders() {
@@ -235,7 +235,7 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 		parameter.add("AMOUNT", (new Integer(amount.multiply(new BigDecimal(100)).intValue())).toString());
 		parameter.add("OPERATION", "SAL");
 		parameter.add("PAYID", (String)paymentTransaction.getData().get("PAYID"));
-		parameter.add("SHASIGNATURE.SHASIGN", ConcardisSignatureHelper.sha1(parameter, getSecret()));
+		parameter.add("SHASIGN", ConcardisSignatureHelper.sha1(parameter, getSecret()));
 
 		@SuppressWarnings("serial")
 		HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<MultiValueMap<String, String>>(parameter, new HttpHeaders() {
