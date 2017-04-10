@@ -10,10 +10,8 @@ import java.util.Set;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import com.bakerbeach.market.payment.model.PaymentTransaction;
 import com.bakerbeach.market.payment.service.PaymentDataDao;
 import com.bakerbeach.market.payment.service.TransactionDao;
-import com.bakerbeach.market.payment.service.TransactionDaoException;
 
 public abstract class AbstractConcardisPayment {
 	
@@ -22,6 +20,7 @@ public abstract class AbstractConcardisPayment {
 	private final String URL_ORDER = "https://secure.payengine.de/ncol/[mode]/orderdirect.asp";
 	private final String URL_MAINTENANCE = "https://secure.payengine.de/ncol/[mode]/maintenancedirect.asp";
 	private final String URL_ECOMMERCE = "https://secure.payengine.de/ncol/[mode]/orderstandard_utf8.asp";
+										
 	
 	private String mode = "test";
 	private String secret;
@@ -76,7 +75,7 @@ public abstract class AbstractConcardisPayment {
 	}
 	
 	protected final String getECommerceUrl(){
-		return URL_TOKENPAGE.replace("[mode]", mode);
+		return URL_ECOMMERCE.replace("[mode]", mode);
 	}
 
 	public String getSecret() {
