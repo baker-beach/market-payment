@@ -52,7 +52,7 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 		parameter.add("ALIAS.ALIASID", paymentContext.getCustomerId());
 		parameter.add("CARD.PAYMENTMETHOD", "CreditCard");
 		parameter.add("ALIAS.STOREPERMANENTLY", "Y");
-		parameter.add("LAYOUT.TEMPLATENAME", "cc");
+		parameter.add("LAYOUT.LANGUAGE", shopContext.getCurrentLocale().toString());
 		parameter.add("PARAMETERS.ACCEPTURL", shopContext.getApplicationPath() + getReturnUrl());
 		parameter.add("PARAMETERS.EXCEPTIONURL", shopContext.getApplicationPath() + getCancelUrl());
 		parameter.add("SHASIGNATURE.SHASIGN", ConcardisSignatureHelper.sha1(parameter, getSecret()));
