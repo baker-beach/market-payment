@@ -18,7 +18,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+
+import com.bakerbeach.market.commons.MessageImpl;
 import com.bakerbeach.market.core.api.model.Cart;
+import com.bakerbeach.market.core.api.model.Message;
 import com.bakerbeach.market.core.api.model.Order;
 import com.bakerbeach.market.core.api.model.ShopContext;
 import com.bakerbeach.market.payment.api.service.PaymentServiceException;
@@ -78,13 +81,12 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardNumber", params.get("CardNumber"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("Brand", params.get("Brand"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("card", 1);
-				if(pd.getLastPaymemtMethodCode().equals(getPaymentMethodCode())){
+				if (pd.getLastPaymemtMethodCode().equals(getPaymentMethodCode())) {
 					paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
 					paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
 					paymentContext.setPaymentValid(true);
 				}
-					
-						
+
 			}
 		} catch (Exception e) {
 		}
@@ -126,10 +128,10 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 				paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
 				paymentContext.setPaymentValid(true);
 			} catch (Exception e) {
-				throw new PaymentServiceException();
+				throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.return.error"));
 			}
 		} else {
-			throw new PaymentServiceException();
+			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.return.error"));
 		}
 	}
 
@@ -157,7 +159,7 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 	@Override
 	public void doOrder(Order order, PaymentContext paymentContext) throws PaymentServiceException {
 		doReservation(order);
-		if(instantCapture)
+		if (instantCapture)
 			doCapture(order, order.getTotal());
 	}
 
@@ -197,33 +199,33 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 		try {
 			Document document = reader.read(new StringReader(result));
 			Element ncresponse = document.getRootElement();
-			
+
 			PaymentTransaction paymentTransaction = getPaymentTransactionData(order.getId());
-			
+
 			Map<String, Object> log = new HashMap<String, Object>();
 			log.put("request", "reservation");
 			log.put("response", result);
-			
+
 			paymentTransaction.getLog().add(log);
-			
+
 			if (ncresponse.attribute("STATUS").getStringValue().equals("5")) {
 				paymentTransaction.getData().put("PAYID", ncresponse.attribute("PAYID").getStringValue());
 				getTransactionDao().saveOrUpdate(paymentTransaction);
 				pd.setLastPaymemtMethodCode(getPaymentMethodCode());
 				getPaymentDataDao().saveOrUpdate(pd);
-				
+
 			} else {
 				getTransactionDao().saveOrUpdate(paymentTransaction);
-				throw new PaymentServiceException();
+				throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.reservation.error"));
 			}
 		} catch (TransactionDaoException | DocumentException e) {
-			throw new PaymentServiceException();
+			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.reservation.error"));
 		}
 	}
 
 	@Override
 	public void doCapture(Order order, BigDecimal amount) {
-		
+
 		PaymentTransaction paymentTransaction = getPaymentTransactionData(order.getId());
 
 		MultiValueMap<String, String> parameter = new LinkedMultiValueMap<String, String>();
@@ -234,7 +236,7 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 		parameter.add("PSWD", getPassword());
 		parameter.add("AMOUNT", (new Integer(amount.multiply(new BigDecimal(100)).intValue())).toString());
 		parameter.add("OPERATION", "SAL");
-		parameter.add("PAYID", (String)paymentTransaction.getData().get("PAYID"));
+		parameter.add("PAYID", (String) paymentTransaction.getData().get("PAYID"));
 		parameter.add("SHASIGN", ConcardisSignatureHelper.sha1(parameter, getSecret()));
 
 		@SuppressWarnings("serial")
@@ -244,18 +246,19 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 			}
 		});
 		String result = getRestTemplate().postForObject(getMaintenanceUrl(), entity, String.class);
-		
+
 		Map<String, Object> log = new HashMap<String, Object>();
 		log.put("request", "reservation");
 		log.put("response", result);
 		try {
 			getTransactionDao().saveOrUpdate(paymentTransaction);
-		} catch (TransactionDaoException e) {}
+		} catch (TransactionDaoException e) {
+		}
 
 	}
-	
-	protected PaymentTransaction getPaymentTransactionData(String orderId){
-		
+
+	protected PaymentTransaction getPaymentTransactionData(String orderId) {
+
 		try {
 			return getTransactionDao().findByOrderId(orderId);
 		} catch (TransactionDaoException e) {
@@ -264,11 +267,11 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 			paymentTransaction.setPaymentMethodCode(getPaymentMethodCode());
 			return paymentTransaction;
 		}
-		
+
 	}
-	
-	protected PaymentData getPaymentData(String customerId){
-		
+
+	protected PaymentData getPaymentData(String customerId) {
+
 		try {
 			return getPaymentDataDao().findByCustomerId(customerId);
 		} catch (TransactionDaoException e) {
@@ -276,7 +279,7 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 			paymentData.setCustomerId(customerId);
 			return paymentData;
 		}
-		
+
 	}
 
 	public boolean isInstantCapture() {
