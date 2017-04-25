@@ -191,6 +191,7 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 		parameter.add("OPERATION", "RES");
 		parameter.add("PM", "CreditCard");
 		parameter.add("ALIAS", (String) paymentData.get("AliasId"));
+		parameter.add("ECI", "9");
 		parameter.add("SHASIGN", ConcardisSignatureHelper.sha1(parameter, getSecret()));
 
 		@SuppressWarnings("serial")
