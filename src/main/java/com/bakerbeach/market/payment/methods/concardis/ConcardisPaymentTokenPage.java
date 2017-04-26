@@ -254,8 +254,9 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 		String result = getRestTemplate().postForObject(getMaintenanceUrl(), entity, String.class);
 
 		Map<String, Object> log = new HashMap<String, Object>();
-		log.put("request", "reservation");
+		log.put("request", "capture");
 		log.put("response", result);
+		paymentTransaction.getLog().add(log);
 		try {
 			getTransactionDao().saveOrUpdate(paymentTransaction);
 		} catch (TransactionDaoException e) {
