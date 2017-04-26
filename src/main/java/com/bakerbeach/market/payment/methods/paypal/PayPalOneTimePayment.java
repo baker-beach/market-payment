@@ -62,10 +62,14 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 		paymentContext.getPaymentDataMap().put(getPaymentMethodCode(), new HashMap<String, Object>());
 		try {
 			PaymentData paymentData = paymentDataDao.findByCustomerId(paymentContext.getCustomerId());
-			if (paymentData.getLastPaymemtMethodCode().equals(this.getPaymentMethodCode())) {
+			if(paymentContext.getCurrentPaymentMethodCode().equals("")){
+				if (paymentData.getLastPaymemtMethodCode().equals(this.getPaymentMethodCode())) {
+					paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.paypal");
+					paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
+					paymentContext.setPaymentValid(true);
+				}
+			}else if(paymentContext.getCurrentPaymentMethodCode().equals(getPaymentMethodCode())){
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.paypal");
-				paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
-				paymentContext.setPaymentValid(true);
 			}
 		} catch (Exception e) {
 		}

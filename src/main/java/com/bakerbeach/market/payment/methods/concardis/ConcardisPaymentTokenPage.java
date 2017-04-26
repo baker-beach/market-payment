@@ -81,16 +81,16 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardNumber", params.get("CardNumber"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("Brand", params.get("Brand"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("card", 1);
-				if (pd.getLastPaymemtMethodCode() != null && pd.getLastPaymemtMethodCode().equals(getPaymentMethodCode())) {
+			
+				if(paymentContext.getCurrentPaymentMethodCode().equals("")){
+					if (pd.getLastPaymemtMethodCode() != null && pd.getLastPaymemtMethodCode().equals(getPaymentMethodCode())) {
+						paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
+						paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
+						paymentContext.setPaymentValid(true);
+					}
+				}else if(paymentContext.getCurrentPaymentMethodCode().equals(getPaymentMethodCode())){
 					paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
-					paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
-					paymentContext.setPaymentValid(true);
 				}
-				
-				if(paymentContext.getCurrentPaymentMethodCode() != null && paymentContext.getCurrentPaymentMethodCode().equals(getPaymentMethodCode())){
-					paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
-				}
-
 			}
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
