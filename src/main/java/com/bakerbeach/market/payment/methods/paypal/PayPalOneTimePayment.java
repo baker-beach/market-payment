@@ -60,19 +60,24 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 	@Override
 	public void initCheckout(PaymentContext paymentContext, Cart cart, ShopContext shopContext) {
 		paymentContext.getPaymentDataMap().put(getPaymentMethodCode(), new HashMap<String, Object>());
+
+		PaymentData paymentData;
 		try {
-			PaymentData paymentData = paymentDataDao.findByCustomerId(paymentContext.getCustomerId());
-			if(paymentContext.getCurrentPaymentMethodCode().equals("")){
-				if (paymentData.getLastPaymemtMethodCode().equals(this.getPaymentMethodCode())) {
-					paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.paypal");
-					paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
-					paymentContext.setPaymentValid(true);
-				}
-			}else if(paymentContext.getCurrentPaymentMethodCode().equals(getPaymentMethodCode())){
-				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.paypal");
-			}
-		} catch (Exception e) {
+			paymentData = paymentDataDao.findByCustomerId(paymentContext.getCustomerId());
+		} catch (TransactionDaoException e) {
+			paymentData = new PaymentData();
 		}
+
+		if (paymentContext.getCurrentPaymentMethodCode().equals("")) {
+			if (paymentData.getLastPaymemtMethodCode() != null && paymentData.getLastPaymemtMethodCode().equals(this.getPaymentMethodCode())) {
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.paypal");
+				paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
+				paymentContext.setPaymentValid(true);
+			}
+		} else if (paymentContext.getCurrentPaymentMethodCode().equals(getPaymentMethodCode())) {
+			paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.paypal");
+		}
+
 	}
 
 	@Override
@@ -304,7 +309,6 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 	}
 
 	public void doCapture(Order order, BigDecimal amount) throws PaymentServiceException {
-
 		try {
 			PaymentTransaction paymentTransaction = transactionDao.findByOrderId(order.getId());
 			String paypalOrderId = (String) paymentTransaction.getData().get("paypal_order_id");
