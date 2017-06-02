@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 import com.bakerbeach.market.core.api.model.Cart;
-import com.bakerbeach.market.core.api.model.Order;
 import com.bakerbeach.market.core.api.model.ShopContext;
+import com.bakerbeach.market.order.api.model.Order;
 import com.bakerbeach.market.payment.api.service.PaymentServiceException;
 import com.bakerbeach.market.payment.model.PaymentContext;
 
