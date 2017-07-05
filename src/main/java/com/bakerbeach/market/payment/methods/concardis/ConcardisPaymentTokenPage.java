@@ -33,7 +33,7 @@ import com.bakerbeach.market.payment.service.TransactionDaoException;
 
 public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implements PaymentMethod {
 
-	private boolean instantCapture = true;
+	private boolean instantCapture = false;
 
 	@Override
 	public String getPaymentType() {
