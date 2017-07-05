@@ -126,14 +126,13 @@ public class PaymentServiceImpl implements PaymentService {
 	
 	@Override
 	public PaymentInfo doCapture(Order order, BigDecimal amount) throws PaymentServiceException {
-//		PaymentMethod paymentMethod = paymentMethods
-//				.get(order.getShopCode() + "|" + paymentContext.getCurrentPaymentMethodCode());
-//		if (paymentMethod != null) {
-//			paymentMethod.doCapture(order, amount);
-//			return new PaymentInfoImpl(paymentContext);
-//		} else
-//			throw new PaymentServiceException();
-		return null;
+		PaymentMethod paymentMethod = paymentMethods
+				.get(order.getShopCode() + "|" + order.getPaymentCode());
+		if (paymentMethod != null) {
+			paymentMethod.doCapture(order, amount);
+			return null;
+		} else
+			throw new PaymentServiceException();
 	}
 
 	/**
