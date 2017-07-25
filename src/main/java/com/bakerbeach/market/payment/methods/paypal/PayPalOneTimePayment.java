@@ -201,9 +201,20 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 		transaction.setDescription("This is the payment transaction description.");
 
 		ItemList itemList = new ItemList();
-
+		
+		List<String> qualifiers = Arrays.asList(CartItemQualifier.PRODUCT, CartItemQualifier.VPRODUCT);
+		for (CartItem cartItem : cart.getCartItems()) {	
+			if (qualifiers.contains(cartItem.getQualifier())) {
+				Item item = new Item();
+				item.setName(cartItem.getTitle1() + " " + cartItem.getTitle2() + " " + cartItem.getTitle3());
+				item.setPrice(nf.format(cartItem.getUnitPrice()));
+				item.setCurrency(paymentContext.getCurency());
+				item.setQuantity(((Integer) cartItem.getQuantity().intValue()).toString());
+				itemList.getItems().add(item);
+			}
+		}
+		qualifiers = Arrays.asList(CartItemQualifier.SERVICE, CartItemQualifier.SHIPPING, CartItemQualifier.DISCOUNT);
 		for (CartItem cartItem : cart.getCartItems()) {
-			List<String> qualifiers = Arrays.asList(CartItemQualifier.PRODUCT, CartItemQualifier.VPRODUCT, CartItemQualifier.SERVICE, CartItemQualifier.SHIPPING, CartItemQualifier.DISCOUNT);
 			if (qualifiers.contains(cartItem.getQualifier())) {
 				Item item = new Item();
 				item.setName(cartItem.getTitle1() + " " + cartItem.getTitle2() + " " + cartItem.getTitle3());
@@ -214,15 +225,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 			}
 		}
 
-		Total discount = cart.getDiscount();
-		if (discount != null && discount.getGross().compareTo(BigDecimal.ZERO) != 0) {
-			Item item = new Item();
-			item.setName("Discount");
-			item.setPrice(nf.format(discount.getGross()));
-			item.setCurrency(paymentContext.getCurency());
-			item.setQuantity("1");
-			itemList.getItems().add(item);
-		}
+
 
 		// ##TODO
 		// ShippingAddress shippingAddress = new ShippingAddress();
