@@ -152,7 +152,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 		try {
 			paymentDataDao.saveOrUpdate(paymentData);
 		} catch (TransactionDaoException e) {
-			e.printStackTrace();
+			log.error("error saving paymentData order:" + order.getId());
 		}
 	}
 
@@ -178,8 +178,10 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 			paymentTransaction.getLog().add(logAuth);
 			transactionDao.saveOrUpdate(paymentTransaction);
 		} catch (TransactionDaoException e) {
+			log.error("error saving paymentTransaction order:" + order.getId());
 			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.order.error"));
 		} catch (PayPalRESTException e) {
+			log.error("error paypal order:" + order.getId());
 			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.order.error"));
 		}
 	}

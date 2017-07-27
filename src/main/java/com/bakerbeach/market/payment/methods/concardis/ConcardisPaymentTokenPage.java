@@ -13,6 +13,8 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -26,6 +28,7 @@ import com.bakerbeach.market.core.api.model.ShopContext;
 import com.bakerbeach.market.order.api.model.Order;
 import com.bakerbeach.market.payment.api.service.PaymentServiceException;
 import com.bakerbeach.market.payment.methods.PaymentMethod;
+import com.bakerbeach.market.payment.methods.paypal.PayPalOneTimePayment;
 import com.bakerbeach.market.payment.model.PaymentContext;
 import com.bakerbeach.market.payment.model.PaymentData;
 import com.bakerbeach.market.payment.model.PaymentTransaction;
@@ -34,6 +37,8 @@ import com.bakerbeach.market.payment.service.TransactionDaoException;
 public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implements PaymentMethod {
 
 	private boolean instantCapture = false;
+
+	private static final Logger Log = LoggerFactory.getLogger(PayPalOneTimePayment.class.getName());
 
 	@Override
 	public String getPaymentType() {
@@ -46,7 +51,8 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 	}
 
 	@Override
-	public void initCheckout(PaymentContext paymentContext, Cart cart, ShopContext shopContext) throws PaymentServiceException {
+	public void initCheckout(PaymentContext paymentContext, Cart cart, ShopContext shopContext)
+			throws PaymentServiceException {
 		paymentContext.getPaymentDataMap().put(getPaymentMethodCode(), new HashMap<String, Object>());
 
 		MultiValueMap<String, String> parameter = new LinkedMultiValueMap<String, String>();
@@ -76,20 +82,26 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 			PaymentData pd = getPaymentData(paymentContext.getCustomerId());
 			Map params = (Map) pd.getPaymentData().get(getPaymentMethodCode());
 			if (params.containsKey("Brand")) {
-				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("ExpiryDate", params.get("ExpiryDate"));
-				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardHolderName", params.get("CardHolderName"));
-				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardNumber", params.get("CardNumber"));
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("ExpiryDate",
+						params.get("ExpiryDate"));
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardHolderName",
+						params.get("CardHolderName"));
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardNumber",
+						params.get("CardNumber"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("Brand", params.get("Brand"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("card", 1);
-			
-				if(paymentContext.getCurrentPaymentMethodCode().equals("")){
-					if (pd.getLastPaymemtMethodCode() != null && pd.getLastPaymemtMethodCode().equals(getPaymentMethodCode())) {
-						paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
+
+				if (paymentContext.getCurrentPaymentMethodCode().equals("")) {
+					if (pd.getLastPaymemtMethodCode() != null
+							&& pd.getLastPaymemtMethodCode().equals(getPaymentMethodCode())) {
+						paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text",
+								"payment.dashboard.text.concardis");
 						paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
 						paymentContext.setPaymentValid(true);
 					}
-				}else if(paymentContext.getCurrentPaymentMethodCode().equals(getPaymentMethodCode())){
-					paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
+				} else if (paymentContext.getCurrentPaymentMethodCode().equals(getPaymentMethodCode())) {
+					paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text",
+							"payment.dashboard.text.concardis");
 				}
 			}
 		} catch (Exception e) {
@@ -99,11 +111,13 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 	}
 
 	@Override
-	public void initOrder(PaymentContext paymentContext, Cart cart, ShopContext shopContext) throws PaymentServiceException {
+	public void initOrder(PaymentContext paymentContext, Cart cart, ShopContext shopContext)
+			throws PaymentServiceException {
 	}
 
 	@Override
-	public void processReturn(PaymentContext paymentContext, Map<String, String> parameters) throws PaymentServiceException {
+	public void processReturn(PaymentContext paymentContext, Map<String, String> parameters)
+			throws PaymentServiceException {
 
 		if (parameters.get("Alias.Status").equals("0") || parameters.get("Alias.Status").equals("2")) {
 
@@ -124,10 +138,14 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 			pd.getPaymentData().put(getPaymentMethodCode(), params);
 			try {
 				getPaymentDataDao().saveOrUpdate(pd);
-				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
-				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("ExpiryDate", params.get("ExpiryDate"));
-				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardHolderName", params.get("CardHolderName"));
-				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardNumber", params.get("CardNumber"));
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text",
+						"payment.dashboard.text.concardis");
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("ExpiryDate",
+						params.get("ExpiryDate"));
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardHolderName",
+						params.get("CardHolderName"));
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardNumber",
+						params.get("CardNumber"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("Brand", params.get("Brand"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("card", 1);
 				paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
@@ -141,7 +159,8 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 	}
 
 	@Override
-	public void configPayment(PaymentContext paymentContext, Map<String, String> parameter) throws PaymentServiceException {
+	public void configPayment(PaymentContext paymentContext, Map<String, String> parameter)
+			throws PaymentServiceException {
 		paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
 		paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
 
@@ -149,9 +168,12 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 			PaymentData pd = getPaymentDataDao().findByCustomerId(paymentContext.getCustomerId());
 			Map params = (Map) pd.getPaymentData().get(getPaymentMethodCode());
 			if (params.containsKey("Brand")) {
-				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("ExpiryDate", params.get("ExpiryDate"));
-				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardHolderName", params.get("CardHolderName"));
-				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardNumber", params.get("CardNumber"));
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("ExpiryDate",
+						params.get("ExpiryDate"));
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardHolderName",
+						params.get("CardHolderName"));
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardNumber",
+						params.get("CardNumber"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("Brand", params.get("Brand"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("card", 1);
 			}
@@ -195,11 +217,12 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 		parameter.add("SHASIGN", ConcardisSignatureHelper.sha1(parameter, getSecret()));
 
 		@SuppressWarnings("serial")
-		HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<MultiValueMap<String, String>>(parameter, new HttpHeaders() {
-			{
-				setContentType(new MediaType("application", "x-www-form-urlencoded", Charset.forName("UTF-8")));
-			}
-		});
+		HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<MultiValueMap<String, String>>(parameter,
+				new HttpHeaders() {
+					{
+						setContentType(new MediaType("application", "x-www-form-urlencoded", Charset.forName("UTF-8")));
+					}
+				});
 		String result = getRestTemplate().postForObject(getOrderUrl(), entity, String.class);
 		SAXReader reader = new SAXReader();
 		try {
@@ -222,44 +245,51 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 
 			} else {
 				getTransactionDao().saveOrUpdate(paymentTransaction);
+				Log.error("error concardis reservation order:" + order.getId());
 				throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.reservation.error"));
 			}
 		} catch (TransactionDaoException | DocumentException e) {
+			Log.error("error concardis reservation order:" + order.getId());
 			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.reservation.error"));
 		}
 	}
 
 	@Override
 	public void doCapture(Order order, BigDecimal amount) {
-
-		PaymentTransaction paymentTransaction = getPaymentTransactionData(order.getId());
-
-		MultiValueMap<String, String> parameter = new LinkedMultiValueMap<String, String>();
-
-		parameter.add("PSPID", getPspId());
-		parameter.add("ORDERID", order.getId());
-		parameter.add("USERID", getUserId());
-		parameter.add("PSWD", getPassword());
-		parameter.add("AMOUNT", (new Integer(amount.multiply(new BigDecimal(100)).intValue())).toString());
-		parameter.add("OPERATION", "SAL");
-		parameter.add("PAYID", (String) paymentTransaction.getData().get("PAYID"));
-		parameter.add("SHASIGN", ConcardisSignatureHelper.sha1(parameter, getSecret()));
-
-		@SuppressWarnings("serial")
-		HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<MultiValueMap<String, String>>(parameter, new HttpHeaders() {
-			{
-				setContentType(new MediaType("application", "x-www-form-urlencoded", Charset.forName("UTF-8")));
-			}
-		});
-		String result = getRestTemplate().postForObject(getMaintenanceUrl(), entity, String.class);
-
-		Map<String, Object> log = new HashMap<String, Object>();
-		log.put("request", "capture");
-		log.put("response", result);
-		paymentTransaction.getLog().add(log);
 		try {
-			getTransactionDao().saveOrUpdate(paymentTransaction);
-		} catch (TransactionDaoException e) {
+			PaymentTransaction paymentTransaction = getPaymentTransactionData(order.getId());
+
+			MultiValueMap<String, String> parameter = new LinkedMultiValueMap<String, String>();
+
+			parameter.add("PSPID", getPspId());
+			parameter.add("ORDERID", order.getId());
+			parameter.add("USERID", getUserId());
+			parameter.add("PSWD", getPassword());
+			parameter.add("AMOUNT", (new Integer(amount.multiply(new BigDecimal(100)).intValue())).toString());
+			parameter.add("OPERATION", "SAL");
+			parameter.add("PAYID", (String) paymentTransaction.getData().get("PAYID"));
+			parameter.add("SHASIGN", ConcardisSignatureHelper.sha1(parameter, getSecret()));
+
+			@SuppressWarnings("serial")
+			HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<MultiValueMap<String, String>>(parameter,
+					new HttpHeaders() {
+						{
+							setContentType(
+									new MediaType("application", "x-www-form-urlencoded", Charset.forName("UTF-8")));
+						}
+					});
+			String result = getRestTemplate().postForObject(getMaintenanceUrl(), entity, String.class);
+
+			Map<String, Object> log = new HashMap<String, Object>();
+			log.put("request", "capture");
+			log.put("response", result);
+			paymentTransaction.getLog().add(log);
+			try {
+				getTransactionDao().saveOrUpdate(paymentTransaction);
+			} catch (TransactionDaoException e) {
+			}
+		} catch (Exception e) {
+			Log.error("error concardis capture order:" + order.getId());
 		}
 
 	}
