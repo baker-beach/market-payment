@@ -16,7 +16,7 @@
 		<dependency>
 			<groupId>com.bakerbeach.market</groupId>
 			<artifactId>market-payment-api</artifactId>
-			<version>[3.0.0]</version>
+			<version>[3.0.3]</version>
 		</dependency>
 		<dependency>
 			<groupId>com.paypal.sdk</groupId>
@@ -44,5 +44,5 @@
 			<version>1.6.1</version>
 		</dependency>
 	</dependencies>
-	<version>3.0.6</version>
+	<version>3.0.9</version>
 </project>
