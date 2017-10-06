@@ -217,7 +217,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 		}
 		qualifiers = Arrays.asList(CartItemQualifier.SERVICE, CartItemQualifier.SHIPPING, CartItemQualifier.DISCOUNT);
 		for (CartItem cartItem : cart.getCartItems()) {
-			if (qualifiers.contains(cartItem.getQualifier())) {
+			if (qualifiers.contains(cartItem.getQualifier()) && (cartItem.getTotalPrice("std") != BigDecimal.ZERO)) {
 				Item item = new Item();
 				item.setName(cartItem.getTitle1() + " " + cartItem.getTitle2() + " " + cartItem.getTitle3());
 				item.setPrice(nf.format(cartItem.getUnitPrice()));

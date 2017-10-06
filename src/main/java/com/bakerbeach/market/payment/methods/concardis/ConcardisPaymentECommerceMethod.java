@@ -64,7 +64,7 @@ public class ConcardisPaymentECommerceMethod extends AbstractConcardisPayment im
 			parameter.add("PSPID", getPspId());
 			parameter.add("ORDERID", shopContext.getOrderId());
 			parameter.add("AMOUNT", (new Integer(cart.getGrandTotal().multiply(new BigDecimal(100)).intValue()).toString()));
-			parameter.add("CURRENCY", shopContext.getCurrency());
+			parameter.add("CURRENCY", shopContext.getCurrentCurrency().getIsoCode());
 			parameter.add("LANGUAGE", shopContext.getCurrentLocale().toLanguageTag());
 			
 			parameter.add("ACCEPTURL", shopContext.getApplicationPath()+"/concardis/accept/");

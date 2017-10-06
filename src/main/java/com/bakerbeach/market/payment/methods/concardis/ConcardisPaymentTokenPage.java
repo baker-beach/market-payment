@@ -5,10 +5,8 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.lang.NotImplementedException;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -28,7 +26,6 @@ import com.bakerbeach.market.core.api.model.ShopContext;
 import com.bakerbeach.market.order.api.model.Order;
 import com.bakerbeach.market.payment.api.service.PaymentServiceException;
 import com.bakerbeach.market.payment.methods.PaymentMethod;
-import com.bakerbeach.market.payment.methods.paypal.PayPalOneTimePayment;
 import com.bakerbeach.market.payment.model.PaymentContext;
 import com.bakerbeach.market.payment.model.PaymentData;
 import com.bakerbeach.market.payment.model.PaymentTransaction;
@@ -38,7 +35,7 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 
 	private boolean instantCapture = false;
 
-	private static final Logger Log = LoggerFactory.getLogger(PayPalOneTimePayment.class.getName());
+	private static final Logger Log = LoggerFactory.getLogger(ConcardisPaymentTokenPage.class.getName());
 
 	@Override
 	public String getPaymentType() {
@@ -80,7 +77,8 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 
 		try {
 			PaymentData pd = getPaymentData(paymentContext.getCustomerId());
-			Map params = (Map) pd.getPaymentData().get(getPaymentMethodCode());
+			@SuppressWarnings("unchecked")
+			Map<String, Object> params = (Map<String, Object>) pd.getPaymentData().get(getPaymentMethodCode());
 			if (params.containsKey("Brand")) {
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("ExpiryDate",
 						params.get("ExpiryDate"));
@@ -166,7 +164,8 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 
 		try {
 			PaymentData pd = getPaymentDataDao().findByCustomerId(paymentContext.getCustomerId());
-			Map params = (Map) pd.getPaymentData().get(getPaymentMethodCode());
+			@SuppressWarnings("unchecked")
+			Map<String, Object> params = (Map<String, Object>) pd.getPaymentData().get(getPaymentMethodCode());
 			if (params.containsKey("Brand")) {
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("ExpiryDate",
 						params.get("ExpiryDate"));
@@ -187,7 +186,7 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 	public void doOrder(Order order, PaymentContext paymentContext) throws PaymentServiceException {
 		doReservation(order);
 		if (instantCapture)
-			doCapture(order, order.getTotal());
+			doCapture(order, order.getTotal(true).getGross());
 	}
 
 	private void doReservation(Order order) throws PaymentServiceException {
@@ -200,7 +199,7 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 		if (!paymentData.containsKey("AliasId"))
 			throw new PaymentServiceException();
 
-		BigDecimal amount = order.getTotal().multiply(new BigDecimal(100));
+		BigDecimal amount = order.getTotal(true).getGross().multiply(new BigDecimal(100));
 
 		MultiValueMap<String, String> parameter = new LinkedMultiValueMap<String, String>();
 
@@ -209,7 +208,7 @@ public class ConcardisPaymentTokenPage extends AbstractConcardisPayment implemen
 		parameter.add("USERID", getUserId());
 		parameter.add("PSWD", getPassword());
 		parameter.add("AMOUNT", (new Integer(amount.intValue())).toString());
-		parameter.add("CURRENCY", order.getCurrency());
+		parameter.add("CURRENCY", order.getCurrencyCode());
 		parameter.add("OPERATION", "RES");
 		parameter.add("PM", "CreditCard");
 		parameter.add("ALIAS", (String) paymentData.get("AliasId"));
