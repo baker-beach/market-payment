@@ -15,6 +15,7 @@ public interface PaymentMethod {
 	public static final String TYPE_NOTHING = "NOTHING";
 	public static final String TYPE_PAYPAL = "PAYPAL";
 	public static final String TYPE_CREDITCARD = "CREDITCARD";
+	public static final String TYPE_DIRECT_DEBIT = "DIRECT_DEBIT";
 	
 	String getPaymentType();
 	
