@@ -1,6 +1,5 @@
 package com.bakerbeach.market.payment.model;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import com.bakerbeach.market.payment.api.model.PaymentInfo;
@@ -28,13 +27,11 @@ public class PaymentInfoImpl implements PaymentInfo {
 
 	@Override
 	public String getCurrentPaymentMethodCode() {
-		// TODO Auto-generated method stub
 		return currentPaymentMethodCode;
 	}
 
 	@Override
 	public Boolean isPaymentValid() {
-		// TODO Auto-generated method stub
 		return paymentValid;
 	}
 

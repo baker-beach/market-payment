@@ -2,6 +2,8 @@ package com.bakerbeach.market.payment.methods.concardis;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bakerbeach.market.commons.Message;
@@ -16,9 +18,7 @@ import com.bakerbeach.market.payment.service.TransactionDaoException;
 
 public class ConcardisSepaFlexCheckout extends AbstractFlexCheckout implements PaymentMethod {
 
-	{
-		Logger = LoggerFactory.getLogger(ConcardisSepaFlexCheckout.class.getName());
-	}
+	private static final Logger Logger = LoggerFactory.getLogger(ConcardisSepaFlexCheckout.class.getName());
 
 	@Override
 	public String getPaymentType() {
@@ -32,9 +32,9 @@ public class ConcardisSepaFlexCheckout extends AbstractFlexCheckout implements P
 
 	@Override
 	public void initCheckout(PaymentContext paymentContext, Cart cart, ShopContext shopContext) throws PaymentServiceException {
-		
+
 		paymentContext.getPaymentDataMap().put(getPaymentMethodCode(), new HashMap<String, Object>());
-		paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("iframe_href", getiFrameUrl(paymentContext.getCustomerId(),shopContext.getApplicationPath(),shopContext.getCurrentLocale().toString()));
+		paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("iframe_href", getiFrameUrl(paymentContext.getCustomerId(), shopContext.getApplicationPath(), shopContext.getCurrentLocale().toString()));
 
 		try {
 			PaymentData pd = getPaymentData(paymentContext.getCustomerId());
@@ -113,6 +113,11 @@ public class ConcardisSepaFlexCheckout extends AbstractFlexCheckout implements P
 			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.return.error"));
 		}
 
+	}
+
+	@Override
+	protected Logger getLogger() {
+		return Logger;
 	}
 
 }

@@ -19,7 +19,6 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -42,8 +41,6 @@ import com.bakerbeach.market.payment.service.TransactionDaoException;
 
 public abstract class AbstractFlexCheckout extends AbstractPaymentMethod implements PaymentMethod {
 	
-	protected Logger Logger = LoggerFactory.getLogger(AbstractFlexCheckout.class.getName());
-
 	private final String URL_TOKENPAGE = "https://payengine.test.v-psp.com/Tokenization/Hostedpage";
 	private final String URL_TOKENPAGE_PROD = "https://secure.payengine.de/Tokenization/HostedPage";
 	private final String URL_ORDER = "https://secure.payengine.de/ncol/[mode]/orderdirect.asp";
@@ -189,11 +186,11 @@ public abstract class AbstractFlexCheckout extends AbstractPaymentMethod impleme
 
 			} else {
 				getTransactionDao().saveOrUpdate(paymentTransaction);
-				Logger.error("error concardis reservation order:" + order.getId());
+				getLogger().error("error concardis reservation order:" + order.getId());
 				throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.reservation.error"));
 			}
 		} catch (TransactionDaoException | DocumentException e) {
-			Logger.error("error concardis reservation order:" + order.getId());
+			getLogger().error("error concardis reservation order:" + order.getId());
 			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.reservation.error"));
 		}
 	}
@@ -231,7 +228,7 @@ public abstract class AbstractFlexCheckout extends AbstractPaymentMethod impleme
 			} catch (TransactionDaoException e) {
 			}
 		} catch (Exception e) {
-			Logger.error("error concardis capture order:" + order.getId());
+			getLogger().error("error concardis capture order:" + order.getId());
 		}
 
 	}
@@ -332,5 +329,7 @@ public abstract class AbstractFlexCheckout extends AbstractPaymentMethod impleme
 	public void setMode(String mode) {
 		this.mode = mode;
 	}
+	
+	protected abstract Logger getLogger();
 
 }

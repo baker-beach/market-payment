@@ -4,11 +4,13 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,15 +20,14 @@ import com.bakerbeach.market.core.api.model.Cart;
 import com.bakerbeach.market.core.api.model.CartItem;
 import com.bakerbeach.market.core.api.model.CartItemQualifier;
 import com.bakerbeach.market.core.api.model.ShopContext;
-import com.bakerbeach.market.core.api.model.Total;
 import com.bakerbeach.market.order.api.model.Order;
 import com.bakerbeach.market.payment.api.service.PaymentServiceException;
 import com.bakerbeach.market.payment.api.service.PaymentServiceException.PaymentRedirectException;
+import com.bakerbeach.market.payment.methods.AbstractPaymentMethod;
+import com.bakerbeach.market.payment.methods.PaymentMethod;
 import com.bakerbeach.market.payment.model.PaymentContext;
 import com.bakerbeach.market.payment.model.PaymentData;
 import com.bakerbeach.market.payment.model.PaymentTransaction;
-import com.bakerbeach.market.payment.service.PaymentDataDao;
-import com.bakerbeach.market.payment.service.TransactionDao;
 import com.bakerbeach.market.payment.service.TransactionDaoException;
 import com.paypal.api.payments.Amount;
 import com.paypal.api.payments.Capture;
@@ -38,23 +39,41 @@ import com.paypal.api.payments.Payment;
 import com.paypal.api.payments.PaymentExecution;
 import com.paypal.api.payments.RedirectUrls;
 import com.paypal.api.payments.Transaction;
+import com.paypal.base.rest.APIContext;
+import com.paypal.base.rest.OAuthTokenCredential;
 import com.paypal.base.rest.PayPalRESTException;
 
-public class PayPalOneTimePayment extends AbstractPayPalMethod {
+public class PayPalOneTimePayment extends AbstractPaymentMethod {
 
-	private static final Logger log = LoggerFactory.getLogger(PayPalOneTimePayment.class.getName());
-	private static final String DEFAULT_METHOD_CODE = "PAYPAL_ONE_TIME";
+	private static final Logger Logger = LoggerFactory.getLogger(PayPalOneTimePayment.class.getName());
+	
 	private boolean instantCapture = false;
-	private String paymentMethodCode = DEFAULT_METHOD_CODE;
-	private TransactionDao transactionDao;
-	private PaymentDataDao paymentDataDao;
-	private NumberFormat nf;
+	private String clientId;
+	private String secret;
+	private String token;
+	private Date tokenExpires = new Date();
+	private String mode;
+	private String returnUrl;
+	private String cancelUrl;
+	private APIContext apiContext;
+	private Map<String, String> configurationMap;
 
-	public PayPalOneTimePayment() {
+	private NumberFormat nf;
+	{
 		nf = NumberFormat.getInstance(new Locale("en"));
 		nf.setMaximumFractionDigits(2);
 		nf.setMinimumFractionDigits(2);
 		nf.setMinimumIntegerDigits(1);
+	}
+	
+	@Override
+	public String getPaymentMethodCode() {
+		return "PAYPAL_ONE_TIME";
+	}
+	
+	@Override
+	public String getPaymentType() {
+		return PaymentMethod.TYPE_PAYPAL;
 	}
 
 	@Override
@@ -63,7 +82,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 
 		PaymentData paymentData;
 		try {
-			paymentData = paymentDataDao.findByCustomerId(paymentContext.getCustomerId());
+			paymentData = getPaymentDataDao().findByCustomerId(paymentContext.getCustomerId());
 		} catch (TransactionDaoException e) {
 			paymentData = new PaymentData();
 		}
@@ -87,10 +106,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 		paymentContext.setPaymentValid(true);
 	}
 
-	@Override
-	public String getPaymentMethodCode() {
-		return paymentMethodCode;
-	}
+
 
 	@Override
 	public void processReturn(PaymentContext paymentContext, Map<String, String> parameter) throws PaymentServiceException {
@@ -98,7 +114,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 		if (parameter.containsKey("result") && !parameter.get("result").equals("cancel")) {
 
 			try {
-				PaymentTransaction paymentTransaction = transactionDao.findByOrderId(paymentContext.getOrderId());
+				PaymentTransaction paymentTransaction = getTransactionDao().findByOrderId(paymentContext.getOrderId());
 
 				if (parameter.get("paymentId").equals((String) paymentTransaction.getData().get("payment_id"))) {
 					Map<String, Object> log = new HashMap<String, Object>();
@@ -108,7 +124,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 					String payerID = payment.getPayer().getPayerInfo().getPayerId();
 					if (parameter.get("PayerID").equals(payerID)) {
 						paymentTransaction.getData().put("payer_id", payerID);
-						transactionDao.saveOrUpdate(paymentTransaction);
+						getTransactionDao().saveOrUpdate(paymentTransaction);
 					}
 				}
 			} catch (Exception e) {
@@ -122,7 +138,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 	public void initOrder(PaymentContext paymentContext, Cart cart, ShopContext shopContext) throws PaymentServiceException {
 
 		try {
-			PaymentTransaction paymentTransaction = transactionDao.findByOrderId(shopContext.getOrderId());
+			PaymentTransaction paymentTransaction = getTransactionDao().findByOrderId(shopContext.getOrderId());
 			if (!paymentTransaction.getData().containsKey("payer_id")) {
 				throw new TransactionDaoException();
 			}
@@ -138,21 +154,21 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 		doOrder(order);
 
 		if (instantCapture) {
-			doCapture(order, order.getTotal());
+			doCapture(order, order.getTotal(true).getGross());
 		}
 
 		PaymentData paymentData;
 		try {
-			paymentData = paymentDataDao.findByCustomerId(paymentContext.getCustomerId());
+			paymentData = getPaymentDataDao().findByCustomerId(paymentContext.getCustomerId());
 		} catch (Exception e) {
 			paymentData = new PaymentData();
 			paymentData.setCustomerId(paymentContext.getCustomerId());
 		}
 		paymentData.setLastPaymemtMethodCode(this.getPaymentMethodCode());
 		try {
-			paymentDataDao.saveOrUpdate(paymentData);
+			getPaymentDataDao().saveOrUpdate(paymentData);
 		} catch (TransactionDaoException e) {
-			log.error("error saving paymentData order:" + order.getId());
+			Logger.error("error saving paymentData order:" + order.getId());
 		}
 	}
 
@@ -160,7 +176,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 		try {
 			Map<String, Object> log = new HashMap<String, Object>();
 			log.put("request", "payment_execute");
-			PaymentTransaction paymentTransaction = transactionDao.findByOrderId(order.getId());
+			PaymentTransaction paymentTransaction = getTransactionDao().findByOrderId(order.getId());
 			String paymentId = (String) paymentTransaction.getData().get("payment_id");
 			Payment payment = Payment.get(getApiContext(), paymentId);
 			PaymentExecution pe = new PaymentExecution();
@@ -168,7 +184,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 			payment = payment.execute(getApiContext(), pe);
 			log.put("response", payment.toJSON());
 			paymentTransaction.getLog().add(log);
-			transactionDao.saveOrUpdate(paymentTransaction);
+			getTransactionDao().saveOrUpdate(paymentTransaction);
 			com.paypal.api.payments.Order paypalOrder = payment.getTransactions().get(0).getRelatedResources().get(0).getOrder();
 			paymentTransaction.getData().put("paypal_order_id", paypalOrder.getId());
 			Map<String, Object> logAuth = new HashMap<String, Object>();
@@ -176,12 +192,12 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 			log.put("request", "order_authorization");
 			log.put("response", paypalOrder.authorize(getApiContext()).toJSON());
 			paymentTransaction.getLog().add(logAuth);
-			transactionDao.saveOrUpdate(paymentTransaction);
+			getTransactionDao().saveOrUpdate(paymentTransaction);
 		} catch (TransactionDaoException e) {
-			log.error("error saving paymentTransaction order:" + order.getId());
+			Logger.error("error saving paymentTransaction order:" + order.getId());
 			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.order.error"));
 		} catch (PayPalRESTException e) {
-			log.error("error paypal order:" + order.getId());
+			Logger.error("error paypal order:" + order.getId());
 			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.order.error"));
 		}
 	}
@@ -190,7 +206,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 
 		PaymentTransaction paymentTransaction = new PaymentTransaction();
 
-		paymentTransaction.setPaymentMethodCode(this.paymentMethodCode);
+		paymentTransaction.setPaymentMethodCode(getPaymentMethodCode());
 		paymentTransaction.setOrderId(shopContext.getOrderId());
 
 		Transaction transaction = new Transaction();
@@ -203,31 +219,29 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 		transaction.setDescription("This is the payment transaction description.");
 
 		ItemList itemList = new ItemList();
-		
+
 		List<String> qualifiers = Arrays.asList(CartItemQualifier.PRODUCT, CartItemQualifier.VPRODUCT);
-		for (CartItem cartItem : cart.getCartItems()) {	
+		for (CartItem cartItem : cart.getItems().values()) {
 			if (qualifiers.contains(cartItem.getQualifier())) {
 				Item item = new Item();
-				item.setName(cartItem.getTitle1() + " " + cartItem.getTitle2() + " " + cartItem.getTitle3());
-				item.setPrice(nf.format(cartItem.getUnitPrice()));
+				item.setName(cartItem.getTitle("title1") + " " + cartItem.getTitle("title2") + " " + cartItem.getTitle("title3"));
+				item.setPrice(nf.format(cartItem.getUnitPrice("std")));
 				item.setCurrency(paymentContext.getCurency());
 				item.setQuantity(((Integer) cartItem.getQuantity().intValue()).toString());
 				itemList.getItems().add(item);
 			}
 		}
 		qualifiers = Arrays.asList(CartItemQualifier.SERVICE, CartItemQualifier.SHIPPING, CartItemQualifier.DISCOUNT);
-		for (CartItem cartItem : cart.getCartItems()) {
+		for (CartItem cartItem : cart.getItems().values()) {
 			if (qualifiers.contains(cartItem.getQualifier()) && (cartItem.getTotalPrice("std") != BigDecimal.ZERO)) {
 				Item item = new Item();
-				item.setName(cartItem.getTitle1() + " " + cartItem.getTitle2() + " " + cartItem.getTitle3());
-				item.setPrice(nf.format(cartItem.getUnitPrice()));
+				item.setName(cartItem.getTitle("title1") + " " + cartItem.getTitle("title2") + " " + cartItem.getTitle("title3"));
+				item.setPrice(nf.format(cartItem.getUnitPrice("std")));
 				item.setCurrency(paymentContext.getCurency());
 				item.setQuantity(((Integer) cartItem.getQuantity().intValue()).toString());
 				itemList.getItems().add(item);
 			}
 		}
-
-
 
 		// ##TODO
 		// ShippingAddress shippingAddress = new ShippingAddress();
@@ -307,7 +321,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.init.error"));
 		} finally {
 			try {
-				transactionDao.saveOrUpdate(paymentTransaction);
+				getTransactionDao().saveOrUpdate(paymentTransaction);
 			} catch (TransactionDaoException e) {
 			}
 		}
@@ -315,11 +329,11 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 
 	public void doCapture(Order order, BigDecimal amount) throws PaymentServiceException {
 		try {
-			PaymentTransaction paymentTransaction = transactionDao.findByOrderId(order.getId());
+			PaymentTransaction paymentTransaction = getTransactionDao().findByOrderId(order.getId());
 			String paypalOrderId = (String) paymentTransaction.getData().get("paypal_order_id");
 			com.paypal.api.payments.Order paypalOrder = com.paypal.api.payments.Order.get(getApiContext(), paypalOrderId);
 			Amount paypalAmount = new Amount();
-			paypalAmount.setCurrency(order.getCurrency());
+			paypalAmount.setCurrency(order.getCurrencyCode());
 			paypalAmount.setTotal(nf.format(amount));
 			Capture capture = new Capture();
 			capture.setAmount(paypalAmount);
@@ -335,7 +349,7 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 
 			paymentTransaction.getLog().add(log);
 
-			transactionDao.saveOrUpdate(paymentTransaction);
+			getTransactionDao().saveOrUpdate(paymentTransaction);
 
 			if (!(capture.getState().equals("completed") || capture.getState().equals("pending"))) {
 				throw new PaymentServiceException(new MessageImpl(MessageImpl.TYPE_ERROR, "paypal.capture.error"));
@@ -349,39 +363,89 @@ public class PayPalOneTimePayment extends AbstractPayPalMethod {
 
 	}
 
-	protected Logger getLogger() {
-		return log;
-	}
-
-	public TransactionDao getTransactionDao() {
-		return transactionDao;
-	}
-
-	public void setTransactionDao(TransactionDao transactionDao) {
-		this.transactionDao = transactionDao;
-	}
-
-	public PaymentDataDao getPaymentDataDao() {
-		return paymentDataDao;
-	}
-
-	public void setPaymentDataDao(PaymentDataDao paymentDataDao) {
-		this.paymentDataDao = paymentDataDao;
-	}
-
-	/**
-	 * @return the instantCapture
-	 */
 	public boolean isInstantCapture() {
 		return instantCapture;
 	}
 
-	/**
-	 * @param instantCapture
-	 *            the instantCapture to set
-	 */
 	public void setInstantCapture(boolean instantCapture) {
 		this.instantCapture = instantCapture;
+	}
+
+	private void init() {
+		Logger.debug("init configurationMap with mode: " + mode);
+		configurationMap = new HashMap<String, String>();
+		configurationMap.put("mode", mode);
+	}
+
+	protected void initOAuth2Token() {
+		init();
+		Logger.debug("get OAuth token secret: " + secret + " clientid: " + clientId);
+		OAuthTokenCredential tokenCredential = new OAuthTokenCredential(clientId, secret, configurationMap);
+		try {
+			token = tokenCredential.getAccessToken();
+			Date createdAt = new Date();
+			tokenExpires.setTime(createdAt.getTime() + (tokenCredential.expiresIn() - 3600) * 1000);
+			Logger.debug("token expires: " + tokenExpires);
+		} catch (PayPalRESTException e) {
+			Logger.error(ExceptionUtils.getMessage(e));
+			Logger.debug(ExceptionUtils.getStackTrace(e));
+		}
+	}
+
+	public String getToken() {
+		if (token != null) {
+			if (tokenExpires.before(new Date()))
+				initOAuth2Token();
+		} else {
+			initOAuth2Token();
+		}
+		return token;
+	}
+
+	public APIContext getApiContext() {
+		apiContext = new APIContext(getToken());
+		apiContext.setConfigurationMap(configurationMap);
+		return apiContext;
+	}
+
+	public String getClientId() {
+		return clientId;
+	}
+
+	public void setClientId(String clientId) {
+		this.clientId = clientId;
+	}
+
+	public String getSecret() {
+		return secret;
+	}
+
+	public void setSecret(String secret) {
+		this.secret = secret;
+	}
+
+	public String getMode() {
+		return mode;
+	}
+
+	public void setMode(String mode) {
+		this.mode = mode;
+	}
+
+	public String getReturnUrl() {
+		return returnUrl;
+	}
+
+	public void setReturnUrl(String returnUrl) {
+		this.returnUrl = returnUrl;
+	}
+
+	public String getCancelUrl() {
+		return cancelUrl;
+	}
+
+	public void setCancelUrl(String cancelUrl) {
+		this.cancelUrl = cancelUrl;
 	}
 
 }

@@ -3,6 +3,7 @@ package com.bakerbeach.market.payment.methods.concardis;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import com.bakerbeach.market.commons.Message;
 import com.bakerbeach.market.commons.MessageImpl;
 import com.bakerbeach.market.core.api.model.Cart;
@@ -15,9 +16,8 @@ import com.bakerbeach.market.payment.service.TransactionDaoException;
 
 public class ConcardisCreditCardFlexCheckout extends AbstractFlexCheckout implements PaymentMethod {
 
-	{
-		Logger = LoggerFactory.getLogger(ConcardisCreditCardFlexCheckout.class.getName());
-	}
+	private static final Logger Logger = LoggerFactory.getLogger(ConcardisCreditCardFlexCheckout.class.getName());
+
 
 	@Override
 	public String getPaymentType() {
@@ -121,11 +121,8 @@ public class ConcardisCreditCardFlexCheckout extends AbstractFlexCheckout implem
 		paymentContext.setPaymentValid(true);
 	}
 
-
-
-
-
-
-
-
+	@Override
+	protected Logger getLogger() {
+		return Logger;
+	}
 }
