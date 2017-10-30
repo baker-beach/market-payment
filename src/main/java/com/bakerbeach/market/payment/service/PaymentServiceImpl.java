@@ -1,9 +1,11 @@
 package com.bakerbeach.market.payment.service;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.bakerbeach.market.commons.Message;
 import com.bakerbeach.market.commons.MessageImpl;
 import com.bakerbeach.market.core.api.model.Cart;
 import com.bakerbeach.market.core.api.model.Customer;
@@ -24,8 +26,7 @@ public class PaymentServiceImpl implements PaymentService {
 	private PaymentDataDao paymentDataDao;
 
 	@Override
-	public PaymentInfo initPayment(ShopContext shopContext, Customer customer, Cart cart)
-			throws PaymentServiceException {
+	public PaymentInfo initPayment(ShopContext shopContext, Customer customer, Cart cart) throws PaymentServiceException {
 		PaymentContext paymentContext = getPaymentContext(shopContext.getOrderId());
 		paymentContext.setShopContext(shopContext);
 		paymentContext.setCart(cart);
@@ -35,16 +36,15 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 		return new PaymentInfoImpl(paymentContext);
 	}
-	
+
 	@Override
 	public PaymentInfo doPreOrder(Cart cart, ShopContext shopContext) throws PaymentServiceException {
 		PaymentContext paymentContext = getPaymentContext(shopContext.getOrderId());
-		PaymentMethod paymentMethod = paymentMethods
-				.get(shopContext.getShopCode() + "|" + paymentContext.getCurrentPaymentMethodCode());
+		PaymentMethod paymentMethod = paymentMethods.get(shopContext.getShopCode() + "|" + paymentContext.getCurrentPaymentMethodCode());
 		paymentMethod.initOrder(paymentContext, cart, shopContext);
 		return new PaymentInfoImpl(paymentContext);
 	}
-	
+
 	@Override
 	public PaymentInfo getPaymentInfo(ShopContext shopContext) {
 		PaymentContext paymentContext = getPaymentContextManager().getPaymentContext(shopContext.getOrderId());
@@ -52,42 +52,37 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Override
-	public PaymentInfo configPaymentMethod(ShopContext shopContext, Map<String, String> parameters)
-			throws PaymentServiceException {
-			PaymentContext paymentContext = getPaymentContextManager().getPaymentContext(shopContext.getOrderId());
-			PaymentMethod paymentMethod = paymentMethods
-					.get(shopContext.getShopCode() + "|" + shopContext.getRequestData().get("code"));
-			if (paymentMethod != null) {
-				paymentMethod.configPayment(paymentContext, parameters);
-				return new PaymentInfoImpl(paymentContext);
-			} else
-				throw new PaymentServiceException();
+	public PaymentInfo configPaymentMethod(ShopContext shopContext, Map<String, String> parameters) throws PaymentServiceException {
+		PaymentContext paymentContext = getPaymentContextManager().getPaymentContext(shopContext.getOrderId());
+		PaymentMethod paymentMethod = paymentMethods.get(shopContext.getShopCode() + "|" + shopContext.getRequestData().get("code"));
+		if (paymentMethod != null) {
+			paymentMethod.configPayment(paymentContext, parameters);
+			return new PaymentInfoImpl(paymentContext);
+		} else
+			throw new PaymentServiceException();
 	}
-	
+
 	@Override
-	public PaymentInfo processReturn(ShopContext shopContext, Map<String, String> parameters)
-			throws PaymentServiceException {
-			PaymentContext paymentContext = getPaymentContextManager().getPaymentContext(shopContext.getOrderId());
-			PaymentMethod paymentMethod = paymentMethods
-					.get(shopContext.getShopCode() + "|" + shopContext.getRequestData().get("code"));
-			if (paymentMethod != null) {
-				paymentMethod.processReturn(paymentContext, parameters);
-				return new PaymentInfoImpl(paymentContext);
-			} else
-				throw new PaymentServiceException();
+	public PaymentInfo processReturn(ShopContext shopContext, Map<String, String> parameters) throws PaymentServiceException {
+		PaymentContext paymentContext = getPaymentContextManager().getPaymentContext(shopContext.getOrderId());
+		PaymentMethod paymentMethod = paymentMethods.get(shopContext.getShopCode() + "|" + shopContext.getRequestData().get("code"));
+		if (paymentMethod != null) {
+			paymentMethod.processReturn(paymentContext, parameters);
+			return new PaymentInfoImpl(paymentContext);
+		} else
+			throw new PaymentServiceException();
 	}
 
 	@Override
 	public PaymentInfo doOrder(Order order) throws PaymentServiceException {
 		PaymentContext paymentContext = getPaymentContextManager().getPaymentContext(order.getId());
-		PaymentMethod paymentMethod = paymentMethods
-				.get(order.getShopCode() + "|" + paymentContext.getCurrentPaymentMethodCode());
+		PaymentMethod paymentMethod = paymentMethods.get(order.getShopCode() + "|" + paymentContext.getCurrentPaymentMethodCode());
 		if (paymentMethod != null) {
 			order.setPaymentCode(paymentMethod.getPaymentMethodCode());
 			paymentMethod.doOrder(order, paymentContext);
 			return new PaymentInfoImpl(paymentContext);
 		} else
-			throw new PaymentServiceException(new MessageImpl(MessageImpl.TYPE_ERROR,"payment.error"));
+			throw new PaymentServiceException(new MessageImpl("payment.error", Message.TYPE_ERROR, "payment.error", Arrays.asList("box"), Arrays.asList()));
 
 	}
 
@@ -123,11 +118,10 @@ public class PaymentServiceImpl implements PaymentService {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 	@Override
 	public PaymentInfo doCapture(Order order, BigDecimal amount) throws PaymentServiceException {
-		PaymentMethod paymentMethod = paymentMethods
-				.get(order.getShopCode() + "|" + order.getPaymentCode());
+		PaymentMethod paymentMethod = paymentMethods.get(order.getShopCode() + "|" + order.getPaymentCode());
 		if (paymentMethod != null) {
 			paymentMethod.doCapture(order, amount);
 			return null;
@@ -143,7 +137,8 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	/**
-	 * @param transactionDao the transactionDao to set
+	 * @param transactionDao
+	 *            the transactionDao to set
 	 */
 	public void setTransactionDao(TransactionDao transactionDao) {
 		this.transactionDao = transactionDao;
@@ -157,13 +152,11 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	/**
-	 * @param paymentDataDao the paymentDataDao to set
+	 * @param paymentDataDao
+	 *            the paymentDataDao to set
 	 */
 	public void setPaymentDataDao(PaymentDataDao paymentDataDao) {
 		this.paymentDataDao = paymentDataDao;
 	}
-	
-
-
 
 }

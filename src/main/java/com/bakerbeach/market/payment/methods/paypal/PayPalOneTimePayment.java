@@ -46,7 +46,7 @@ import com.paypal.base.rest.PayPalRESTException;
 public class PayPalOneTimePayment extends AbstractPaymentMethod {
 
 	private static final Logger Logger = LoggerFactory.getLogger(PayPalOneTimePayment.class.getName());
-	
+
 	private boolean instantCapture = false;
 	private String clientId;
 	private String secret;
@@ -65,12 +65,12 @@ public class PayPalOneTimePayment extends AbstractPaymentMethod {
 		nf.setMinimumFractionDigits(2);
 		nf.setMinimumIntegerDigits(1);
 	}
-	
+
 	@Override
 	public String getPaymentMethodCode() {
 		return "PAYPAL_ONE_TIME";
 	}
-	
+
 	@Override
 	public String getPaymentType() {
 		return PaymentMethod.TYPE_PAYPAL;
@@ -106,8 +106,6 @@ public class PayPalOneTimePayment extends AbstractPaymentMethod {
 		paymentContext.setPaymentValid(true);
 	}
 
-
-
 	@Override
 	public void processReturn(PaymentContext paymentContext, Map<String, String> parameter) throws PaymentServiceException {
 
@@ -128,10 +126,10 @@ public class PayPalOneTimePayment extends AbstractPaymentMethod {
 					}
 				}
 			} catch (Exception e) {
-				throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.return.errror"));
+				throw new PaymentServiceException(new MessageImpl("paypal.return.errror", Message.TYPE_ERROR, "paypal.return.errror", Arrays.asList("box"), null));
 			}
 		} else
-			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.return.cancel"));
+			throw new PaymentServiceException(new MessageImpl("paypal.return.cancel", Message.TYPE_ERROR, "paypal.return.cancel", Arrays.asList("box"), null));
 	}
 
 	@Override
@@ -195,10 +193,10 @@ public class PayPalOneTimePayment extends AbstractPaymentMethod {
 			getTransactionDao().saveOrUpdate(paymentTransaction);
 		} catch (TransactionDaoException e) {
 			Logger.error("error saving paymentTransaction order:" + order.getId());
-			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.order.error"));
+			throw new PaymentServiceException(new MessageImpl("paypal.order.error", Message.TYPE_ERROR, "paypal.order.error", Arrays.asList("box"), null));
 		} catch (PayPalRESTException e) {
 			Logger.error("error paypal order:" + order.getId());
-			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.order.error"));
+			throw new PaymentServiceException(new MessageImpl("paypal.order.error", Message.TYPE_ERROR, "paypal.order.error", Arrays.asList("box"), null));
 		}
 	}
 
@@ -318,7 +316,7 @@ public class PayPalOneTimePayment extends AbstractPaymentMethod {
 		} catch (PaymentRedirectException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.init.error"));
+			throw new PaymentServiceException(new MessageImpl("paypal.init.error", Message.TYPE_ERROR, "paypal.init.error", Arrays.asList("box"), null));
 		} finally {
 			try {
 				getTransactionDao().saveOrUpdate(paymentTransaction);
@@ -352,13 +350,11 @@ public class PayPalOneTimePayment extends AbstractPaymentMethod {
 			getTransactionDao().saveOrUpdate(paymentTransaction);
 
 			if (!(capture.getState().equals("completed") || capture.getState().equals("pending"))) {
-				throw new PaymentServiceException(new MessageImpl(MessageImpl.TYPE_ERROR, "paypal.capture.error"));
+				throw new PaymentServiceException(new MessageImpl("paypal.capture.error", Message.TYPE_ERROR, "paypal.capture.error", Arrays.asList("box"), Arrays.asList()));
 			}
 
-		} catch (TransactionDaoException e) {
-			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.capture.error"));
-		} catch (PayPalRESTException e) {
-			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "paypal.capture.error"));
+		} catch (TransactionDaoException | PayPalRESTException e) {
+			throw new PaymentServiceException(new MessageImpl("paypal.capture.error", Message.TYPE_ERROR, "paypal.capture.error", Arrays.asList("box"), Arrays.asList()));
 		}
 
 	}

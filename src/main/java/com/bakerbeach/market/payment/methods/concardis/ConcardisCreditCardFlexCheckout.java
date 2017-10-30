@@ -1,5 +1,6 @@
 package com.bakerbeach.market.payment.methods.concardis;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,6 @@ import com.bakerbeach.market.payment.service.TransactionDaoException;
 public class ConcardisCreditCardFlexCheckout extends AbstractFlexCheckout implements PaymentMethod {
 
 	private static final Logger Logger = LoggerFactory.getLogger(ConcardisCreditCardFlexCheckout.class.getName());
-
 
 	@Override
 	public String getPaymentType() {
@@ -44,21 +44,15 @@ public class ConcardisCreditCardFlexCheckout extends AbstractFlexCheckout implem
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardNumber", params.get("CardNumber"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("Brand", params.get("Brand"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("card", 1);
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
 
-				if (paymentContext.getCurrentPaymentMethodCode().equals("")) {
-					if (pd.getLastPaymemtMethodCode() != null && pd.getLastPaymemtMethodCode().equals(getPaymentMethodCode())) {
-						paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
-						paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
-						paymentContext.setPaymentValid(true);
-					}
-				} else if (paymentContext.getCurrentPaymentMethodCode().equals(getPaymentMethodCode())) {
-					paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
+				if (paymentContext.getCurrentPaymentMethodCode().equals("") && pd.getLastPaymemtMethodCode() != null && pd.getLastPaymemtMethodCode().equals(getPaymentMethodCode())) {
+					paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
+					paymentContext.setPaymentValid(true);
 				}
 			}
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
 		}
-
 	}
 
 	@Override
@@ -83,26 +77,25 @@ public class ConcardisCreditCardFlexCheckout extends AbstractFlexCheckout implem
 			pd.getPaymentData().put(getPaymentMethodCode(), params);
 			try {
 				getPaymentDataDao().saveOrUpdate(pd);
-				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("ExpiryDate", params.get("ExpiryDate"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardHolderName", params.get("CardHolderName"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardNumber", params.get("CardNumber"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("Brand", params.get("Brand"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("card", 1);
 				paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
 				paymentContext.setPaymentValid(true);
 			} catch (Exception e) {
-				throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.return.error"));
+				throw new PaymentServiceException(new MessageImpl("concardis.return.error", Message.TYPE_ERROR, "concardis.return.error", Arrays.asList("box"), Arrays.asList()));
 			}
 		} else {
-			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.return.error"));
+			throw new PaymentServiceException(new MessageImpl("concardis.return.error", Message.TYPE_ERROR, "concardis.return.error", Arrays.asList("box"), Arrays.asList()));
 		}
 	}
 
 	@Override
 	public void configPayment(PaymentContext paymentContext, Map<String, String> parameter) throws PaymentServiceException {
 		paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
-		paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
 
 		try {
 			PaymentData pd = getPaymentDataDao().findByCustomerId(paymentContext.getCustomerId());
@@ -114,11 +107,11 @@ public class ConcardisCreditCardFlexCheckout extends AbstractFlexCheckout implem
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardNumber", params.get("CardNumber"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("Brand", params.get("Brand"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("card", 1);
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis");
+				paymentContext.setPaymentValid(true);
 			}
 		} catch (Exception e) {
 		}
-
-		paymentContext.setPaymentValid(true);
 	}
 
 	@Override

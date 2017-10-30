@@ -1,5 +1,6 @@
 package com.bakerbeach.market.payment.methods.concardis;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,27 +45,20 @@ public class ConcardisSepaFlexCheckout extends AbstractFlexCheckout implements P
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("accountHolderName", params.get("AccountHolderName"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("accountNumber", params.get("AccountNumber"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("account", 1);
-
-				if (paymentContext.getCurrentPaymentMethodCode().equals("")) {
-					if (pd.getLastPaymemtMethodCode() != null && pd.getLastPaymemtMethodCode().equals(getPaymentMethodCode())) {
-						paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis.DirectDebit");
-						paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
-						paymentContext.setPaymentValid(true);
-					}
-				} else if (paymentContext.getCurrentPaymentMethodCode().equals(getPaymentMethodCode())) {
-					paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis.DirectDebit");
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis.DirectDebit");
+				if (paymentContext.getCurrentPaymentMethodCode().equals("") && pd.getLastPaymemtMethodCode() != null && pd.getLastPaymemtMethodCode().equals(getPaymentMethodCode())) {
+					paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
+					paymentContext.setPaymentValid(true);
 				}
 			}
 		} catch (Exception e) {
 			Logger.error(e.getMessage());
 		}
-
 	}
 
 	@Override
 	public void configPayment(PaymentContext paymentContext, Map<String, String> parameter) throws PaymentServiceException {
 		paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
-		paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis.DirectDebit");
 
 		try {
 			PaymentData pd = getPaymentDataDao().findByCustomerId(paymentContext.getCustomerId());
@@ -74,11 +68,11 @@ public class ConcardisSepaFlexCheckout extends AbstractFlexCheckout implements P
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("accountHolderName", params.get("AccountHolderName"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("accountNumber", params.get("AccountNumber"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("account", 1);
+				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("text", "payment.dashboard.text.concardis.DirectDebit");
+				paymentContext.setPaymentValid(true);
 			}
 		} catch (Exception e) {
 		}
-
-		paymentContext.setPaymentValid(true);
 	}
 
 	@Override
@@ -107,10 +101,10 @@ public class ConcardisSepaFlexCheckout extends AbstractFlexCheckout implements P
 				paymentContext.setCurrentPaymentMethodCode(getPaymentMethodCode());
 				paymentContext.setPaymentValid(true);
 			} catch (Exception e) {
-				throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.return.error"));
+				throw new PaymentServiceException(new MessageImpl("concardis.return.error", Message.TYPE_ERROR, "concardis.return.error", Arrays.asList("box"), Arrays.asList()));
 			}
 		} else {
-			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.return.error"));
+			throw new PaymentServiceException(new MessageImpl("concardis.return.error", Message.TYPE_ERROR, "concardis.return.error", Arrays.asList("box"), Arrays.asList()));
 		}
 
 	}

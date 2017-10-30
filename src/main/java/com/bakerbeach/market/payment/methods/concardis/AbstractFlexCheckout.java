@@ -8,6 +8,7 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +33,7 @@ import com.bakerbeach.market.core.api.model.Cart;
 import com.bakerbeach.market.core.api.model.ShopContext;
 import com.bakerbeach.market.order.api.model.Order;
 import com.bakerbeach.market.payment.api.service.PaymentServiceException;
+import com.bakerbeach.market.payment.api.service.PaymentServiceException.PaymentRedirectException;
 import com.bakerbeach.market.payment.methods.AbstractPaymentMethod;
 import com.bakerbeach.market.payment.methods.PaymentMethod;
 import com.bakerbeach.market.payment.model.PaymentContext;
@@ -165,6 +167,7 @@ public abstract class AbstractFlexCheckout extends AbstractPaymentMethod impleme
 			}
 		});
 		String result = getRestTemplate().postForObject(getOrderUrl(), entity, String.class);
+	
 		SAXReader reader = new SAXReader();
 		try {
 			Document document = reader.read(new StringReader(result));
@@ -187,11 +190,17 @@ public abstract class AbstractFlexCheckout extends AbstractPaymentMethod impleme
 			} else {
 				getTransactionDao().saveOrUpdate(paymentTransaction);
 				getLogger().error("error concardis reservation order:" + order.getId());
-				throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.reservation.error"));
+				getLogger().error(result);
+				if(Arrays.asList("50001111","60000011","60001008","30541001","30331001").contains(ncresponse.attribute("NCERROR").getStringValue())) {
+					PaymentRedirectException pre = new PaymentRedirectException(new MessageImpl("concardis.data.error", Message.TYPE_ERROR, "concardis.data.error", Arrays.asList("box"), Arrays.asList()));
+					pre.setUrl("checkout-payment");
+					throw pre;
+				}
+				throw new PaymentServiceException(new MessageImpl("concardis.reservation.error", Message.TYPE_ERROR, "concardis.reservation.error", Arrays.asList("box"), Arrays.asList()));
 			}
 		} catch (TransactionDaoException | DocumentException e) {
 			getLogger().error("error concardis reservation order:" + order.getId());
-			throw new PaymentServiceException(new MessageImpl(Message.TYPE_ERROR, "concardis.reservation.error"));
+			throw new PaymentServiceException(new MessageImpl("concardis.reservation.error", Message.TYPE_ERROR, "concardis.reservation.error", Arrays.asList("box"), Arrays.asList()));
 		}
 	}
 
