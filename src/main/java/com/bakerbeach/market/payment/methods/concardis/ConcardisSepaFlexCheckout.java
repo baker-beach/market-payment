@@ -33,10 +33,8 @@ public class ConcardisSepaFlexCheckout extends AbstractFlexCheckout implements P
 
 	@Override
 	public void initCheckout(PaymentContext paymentContext, Cart cart, ShopContext shopContext) throws PaymentServiceException {
-
 		paymentContext.getPaymentDataMap().put(getPaymentMethodCode(), new HashMap<String, Object>());
-		paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("iframe_href", getiFrameUrl(paymentContext.getCustomerId(), shopContext.getApplicationPath(), shopContext.getCurrentLocale().toString()));
-
+		paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("iframe_href", getiFrameUrl("direct-debit-"+paymentContext.getCustomerId(), shopContext.getApplicationPath(), shopContext.getCurrentLocale().toString()));
 		try {
 			PaymentData pd = getPaymentData(paymentContext.getCustomerId());
 			@SuppressWarnings("unchecked")
