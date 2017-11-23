@@ -38,7 +38,7 @@ public class ConcardisCreditCardFlexCheckout extends AbstractFlexCheckout implem
 			PaymentData pd = getPaymentData(paymentContext.getCustomerId());
 			@SuppressWarnings("unchecked")
 			Map<String, Object> params = (Map<String, Object>) pd.getPaymentData().get(getPaymentMethodCode());
-			if (params.containsKey("Brand")) {
+			if (params != null && params.containsKey("Brand")) {
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("ExpiryDate", params.get("ExpiryDate"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardHolderName", params.get("CardHolderName"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardNumber", params.get("CardNumber"));
@@ -101,7 +101,7 @@ public class ConcardisCreditCardFlexCheckout extends AbstractFlexCheckout implem
 			PaymentData pd = getPaymentDataDao().findByCustomerId(paymentContext.getCustomerId());
 			@SuppressWarnings("unchecked")
 			Map<String, Object> params = (Map<String, Object>) pd.getPaymentData().get(getPaymentMethodCode());
-			if (params.containsKey("Brand")) {
+			if (params != null && params.containsKey("Brand")) {
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("ExpiryDate", params.get("ExpiryDate"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardHolderName", params.get("CardHolderName"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("CardNumber", params.get("CardNumber"));

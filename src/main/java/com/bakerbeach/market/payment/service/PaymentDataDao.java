@@ -50,7 +50,6 @@ public class PaymentDataDao {
 				throw new TransactionDaoException();
 			}
 		} catch (Exception e) {
-			log.error(ExceptionUtils.getMessage(e));
 			throw new TransactionDaoException();
 		}
 	}

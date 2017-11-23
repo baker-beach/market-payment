@@ -39,7 +39,7 @@ public class ConcardisSepaFlexCheckout extends AbstractFlexCheckout implements P
 			PaymentData pd = getPaymentData(paymentContext.getCustomerId());
 			@SuppressWarnings("unchecked")
 			Map<String, Object> params = (Map<String, Object>) pd.getPaymentData().get(getPaymentMethodCode());
-			if (params.containsKey("AccountNumber")) {
+			if (params != null && params.containsKey("AccountNumber")) {
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("accountHolderName", params.get("AccountHolderName"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("accountNumber", params.get("AccountNumber"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("account", 1);
@@ -49,9 +49,7 @@ public class ConcardisSepaFlexCheckout extends AbstractFlexCheckout implements P
 					paymentContext.setPaymentValid(true);
 				}
 			}
-		} catch (Exception e) {
-			Logger.error(e.getMessage());
-		}
+		} catch (Exception e) {}
 	}
 
 	@Override
@@ -62,7 +60,7 @@ public class ConcardisSepaFlexCheckout extends AbstractFlexCheckout implements P
 			PaymentData pd = getPaymentDataDao().findByCustomerId(paymentContext.getCustomerId());
 			@SuppressWarnings("unchecked")
 			Map<String, Object> params = (Map<String, Object>) pd.getPaymentData().get(getPaymentMethodCode());
-			if (params.containsKey("Brand")) {
+			if (params != null && params.containsKey("AccountNumber")) {
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("accountHolderName", params.get("AccountHolderName"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("accountNumber", params.get("AccountNumber"));
 				paymentContext.getPaymentDataMap().get(getPaymentMethodCode()).put("account", 1);
